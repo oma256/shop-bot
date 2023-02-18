@@ -11,15 +11,29 @@ def send(url):
     return response.text
 
 
-def get_product_categories_from_site(url):
+def get_product_categories_from_site(categories, url):
     response_data = send(url=url)
     soup = BeautifulSoup(response_data, 'lxml')
-    soup = soup.find_all('a', class_='parent')
+    soup = soup.find_all('li', class_='first')
 
-    for s in soup[2:]:
-        data = {
-            'name': s.text,
-            'url': f'https://globus-online.kg{s.get("href")}',
-        }
-        print(data)
+    for i, s in enumerate(soup, start=1):
+        sub_categories = []
+        if s.findChildren('a', class_='sub'):
+            for j, sub_c in enumerate(s.findChildren('a', class_='sub'), start=1):
+                sub_categories.append(
+                    {'id': f'{i}.{j}', 'name': sub_c.text, 'url': sub_c.get('href')}
+                )
+
+        categories.append(
+            {
+                'id': f'{i}',
+                'name': s.findChildren('a', 'first')[0].text,
+                'url': s.findChildren('a', 'first')[0].get('href'),
+                'sub_categories': sub_categories,
+            }
+        )
+
+
+def get_products_from_site(url):
+    response_data = send(url=url)
     
