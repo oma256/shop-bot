@@ -17,6 +17,9 @@ shops = [
 welcome_text = 'Здравствуйте, выберите супермаркет'
 categories = []
 category_ids = []
+sub_category_ids = []
+products = []
+
 
 
 @bot.message_handler(commands=['start'])
@@ -54,6 +57,7 @@ def callback_categories_handler(query):
             if category.get('sub_categories'):
                 markup = types.InlineKeyboardMarkup()
                 for sub_c in category.get('sub_categories'):
+                    sub_category_ids.append(sub_c.get('id'))
                     button = types.InlineKeyboardButton(
                         sub_c.get('name'), callback_data=sub_c.get('id')
                     )
@@ -64,6 +68,22 @@ def callback_categories_handler(query):
                 )
             else:
                 get_products_from_site(url=shops[0].get('site'))
+
+
+@bot.callback_query_handler(lambda query: query.data in sub_category_ids)
+def callback_sub_categories_handler(query):
+    category_id = query.data.split('.')[0]
+    sub_category_id = query.data.split('.')[1]
+
+    for category in categories:
+        if category.get('id') == category_id:
+            for sub_c in category.get('sub_categories'):
+                if sub_c.get('id') == f'{category_id}.{sub_category_id}':
+                    url = f'{shops[0].get("site")}{sub_c.get("url")}'
+                    get_products_from_site(products, url)
+
+                    for product in products:
+                        bot.send_message(query.from_user.id, product.get('name'))
 
 
 bot.infinity_polling()

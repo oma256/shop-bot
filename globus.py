@@ -34,6 +34,11 @@ def get_product_categories_from_site(categories, url):
         )
 
 
-def get_products_from_site(url):
+def get_products_from_site(products: list, url):
+    products.clear()
     response_data = send(url=url)
-    
+    soup = BeautifulSoup(response_data, 'lxml')
+    soup = soup.find_all('div', class_='list-showcase__name')
+
+    for s in soup:
+        products.append({'name': s.text})
